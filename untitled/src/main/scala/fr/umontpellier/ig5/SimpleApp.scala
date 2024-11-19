@@ -2,12 +2,10 @@ package fr.umontpellier.ig5
 
 import com.mongodb.client.{MongoClients, MongoCollection, MongoDatabase}
 import java.io._
-import java.util.zip.{ZipEntry, ZipInputStream}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.bson.Document
 import scala.jdk.CollectionConverters._
-
 
 object SimpleApp {
   implicit val formats: Formats = DefaultFormats
@@ -21,9 +19,9 @@ object SimpleApp {
                   impactScore: Option[Double]
                 )
 
+
   def main(args: Array[String]): Unit = {
-    val filesPath = "src/main/json_files"
-    val outputDir = "./extracted_json_files"
+    val filesPath = "src/main/json_files" // Chemin du dossier contenant les fichiers JSON
     val outputFile = "./filtered_cves.json"
     val mongoUri = "mongodb+srv://test:test@cluster0.io45k.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     val databaseName = "CVE_Database"
@@ -35,29 +33,8 @@ object SimpleApp {
       return
     }
 
-    // Extraire les fichiers JSON des archives ZIP
-    new File(outputDir).mkdirs()
-    directory.listFiles.filter(_.getName.endsWith(".zip")).foreach { zipFile =>
-      println(s"Traitement du fichier ZIP : ${zipFile.getName}")
-      val zipStream = new ZipInputStream(new FileInputStream(zipFile))
-      var entry: ZipEntry = zipStream.getNextEntry
-      while (entry != null) {
-        if (!entry.isDirectory && entry.getName.endsWith(".json")) {
-          val jsonOutputFile = new File(outputDir, entry.getName)
-          jsonOutputFile.getParentFile.mkdirs()
-          val outStream = new FileOutputStream(jsonOutputFile)
-          zipStream.transferTo(outStream)
-          outStream.close()
-        }
-        entry = zipStream.getNextEntry
-      }
-      zipStream.close()
-    }
-
-    println("Tous les fichiers JSON ont été extraits.")
-
     // Lire et traiter les fichiers JSON
-    val jsonFiles = new File(outputDir).listFiles.filter(_.getName.endsWith(".json"))
+    val jsonFiles = directory.listFiles.filter(_.getName.endsWith(".json"))
     val cveList = jsonFiles.flatMap { file =>
       println(s"Lecture du fichier JSON : ${file.getName}")
       val json = parse(new FileReader(file))
